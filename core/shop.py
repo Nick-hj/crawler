@@ -5,11 +5,15 @@ import json
 import random
 import re
 import time
-
+import redis
 from parsel import Selector
 from lib.base_fun import logger, proxy, request_get, headers
 from core.goods_detail import ProductsSpider
 from dynaconf import settings
+
+redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
+                               password=settings.REDIS.PASSWD)
+
 
 class ShopProducts(object):
 
@@ -45,11 +49,11 @@ class ShopProducts(object):
                 urls = self.goods_url(html)
                 if urls:
                     for url in urls:
-                        ProductsSpider(url).goods_info()
-                        time.sleep(random.randint(1, settings.SLEEP_TIME))
+                        # ProductsSpider(url).goods_info()
+                        redis_conn.rpush('aliexpress_url', url)
                         # 下一页
                     next_page = html.xpath('//a[@class="ui-pagination-next"]/@href').get()
-                    time.sleep(random.randint(1, settings.SLEEP_TIME))
+                    time.sleep(random.randint(4, 7))
                     if next_page:
                         page_url = 'https:' + next_page
                         logger.info(f'进入下一页================={page_url}')

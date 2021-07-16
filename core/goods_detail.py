@@ -94,14 +94,14 @@ class ProductsSpider(object):
                     item['shippingFrom'] = self.shipping_from(data)
                     self.goods_data['code'] = True
                     self.goods_data['item'] = item
-                    self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY,
-                                          json.dumps(self.goods_data, ensure_ascii=False))
-                    logger.info(f'成功： {self.url}')
                     # logger.info(json.dumps(self.goods_data, ensure_ascii=False))
                 else:
                     logger.error(f'失败url:   self.url')
             except Exception as e:
-                logger.error(f'失败url:   self.url')
+                logger.error(f'失败url:   self.url ==== {e}')
+            goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
+            self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
+            logger.info(f'爬取结果： {goods_data_dict}')
         return self.goods_data
 
     @logger.catch()
@@ -171,6 +171,15 @@ class ProductsSpider(object):
         :return:
         '''
         image = data['imageModule']['imagePathList']
+        if image:
+            image_list = []
+            for i in image:
+                pattern = re.compile(r'.*(\.jpg|\.jpeg|\.png)')
+                img_format = pattern.match(i)
+                if img_format:
+                    _image = i + "_Q90" + img_format.group(1) + "_.webp"
+                    image_list.append(_image)
+            image = image_list
         return image
 
     @staticmethod
@@ -282,10 +291,19 @@ class ProductsSpider(object):
                 sku = {}
                 # 属性值id集合
                 sku['channel'] = 0
-                try:
-                    sku['costPrice'] = sku_price['skuVal']['skuActivityAmount']['value']
-                except Exception as e:
-                    sku['costPrice'] = sku_price['skuVal']['skuAmount']['value']
+                # 是否新用户
+                is_new_user = data['priceModule'].get('activityMessage', None)
+                if is_new_user:
+                    try:
+                        cost_price = sku_price['skuVal']['skuAmount']['value']
+                    except KeyError as e:
+                        cost_price = sku_price['skuVal']['skuMultiCurrencyCalPrice']
+                else:
+                    try:
+                        cost_price = sku_price['skuVal']['skuActivityAmount']['value']
+                    except KeyError as e:
+                        cost_price = sku_price['skuVal']['skuAmount']['value']
+                sku['costPrice'] = cost_price
                 sku['createTime'] = None
                 sku['goodsId'] = product_id
                 sku['id'] = None
