@@ -65,13 +65,13 @@ def request_get(url, headers=None, proxy=None):
         return 404, ''
 
 
-def request_form_post(url, data, headers=None, proxy=None):
+def request_post(url, data, headers=None, proxy=None):
     try:
         with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy)) as response:
-            return response.text
+            return response.status_code, response
     except requests.exceptions.ProxyError as e:
         with closing(requests.post(url=url, data=data, headers=headers)) as response:
-            return response.text
+            return response.status_code, response
     except Exception as e:
         logger.error(f'请求失败====={e}')
         return 404, ''

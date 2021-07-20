@@ -7,7 +7,7 @@ import redis
 import json
 
 from parsel import Selector
-from lib.base_fun import logger, proxy, request_form_post
+from lib.base_fun import logger, proxy, request_post
 from dynaconf import settings
 
 
@@ -45,12 +45,14 @@ class Reviews(object):
         headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
         }
-        response_text = request_form_post(url=self.url, data=data, headers=headers, proxy=proxy())
-        return response_text
+        # form请求
+        status,response = request_post(url=self.url, data=data, headers=headers, proxy=proxy())
+        if status == 200:
+            return response
 
     def crawl_reviews(self, page=1, flat=True):
-        response_text = self.request_reviews(page)
-        html = Selector(response_text)
+        response = self.request_reviews(page)
+        html = Selector(response.text)
         div_list = html.xpath('//div[@class="feedback-list-wrap"]/div')
         if not div_list:
             return div_list

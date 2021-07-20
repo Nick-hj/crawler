@@ -2,12 +2,11 @@
 # @Time    : 2021/7/18 15:26
 # @Author  : Haijun
 
-import requests
 import json
 import re
 import redis
-from lib.base_fun import logger, proxy, request_get
-from apps.haiying_wish.login_wish import LoginWish
+from lib.base_fun import logger, request_get
+from apps.haiying_wish.wish.login_wish import LoginWish
 from dynaconf import settings
 
 
