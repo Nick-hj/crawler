@@ -33,6 +33,12 @@ BASE_SETTINGS = {
         "DATABASE": MYSQL_DATABASE,
         "PORT": MYSQL_PORT
     },
+    "WISH": {
+        'USERNAME': '',
+        'PASSWD': '',
+        'WISH_COOKIE': 'wish_cookie',
+        'WISH_XSRF': 'wish_xsrf'
+    },
     'SAVE_GOODS_TO_REDIS_KEY': 'save_goods_data',  # 保存数据到redis的key
     'PROXY_USER': '',  # 代理用户名
     'PROXY_PWD': '',  # 代理密码

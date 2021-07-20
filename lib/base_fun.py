@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/8/24 14:39
 # @Author  : Haijun
+import json
 import os
 import requests
 from contextlib import closing
@@ -58,6 +59,18 @@ def request_get(url, headers=None, proxy=None):
             return response.text
     except requests.exceptions.ProxyError as e:
         with closing(requests.get(url=url, headers=headers)) as response:
+            return response.text
+    except Exception as e:
+        logger.error(f'请求失败====={e}')
+        return 404, ''
+
+
+def request_form_post(url, data, headers=None, proxy=None):
+    try:
+        with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy)) as response:
+            return response.text
+    except requests.exceptions.ProxyError as e:
+        with closing(requests.post(url=url, data=data, headers=headers)) as response:
             return response.text
     except Exception as e:
         logger.error(f'请求失败====={e}')

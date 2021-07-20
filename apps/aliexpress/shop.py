@@ -8,15 +8,13 @@ import time
 import redis
 from parsel import Selector
 from lib.base_fun import logger, proxy, request_get, headers
-from core.goods_detail import ProductsSpider
 from dynaconf import settings
-
-redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
-                               password=settings.REDIS.PASSWD)
 
 
 class ShopProducts(object):
-
+    def __init__(self):
+        self.redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
+                                       password=settings.REDIS.PASSWD)
     def start_url(self, url, page):
         """
         第一页
@@ -50,7 +48,7 @@ class ShopProducts(object):
                 if urls:
                     for url in urls:
                         # ProductsSpider(url).goods_info()
-                        redis_conn.rpush('aliexpress_url', url)
+                        self.redis_conn.rpush('aliexpress_url', url)
                         # 下一页
                     next_page = html.xpath('//a[@class="ui-pagination-next"]/@href').get()
                     time.sleep(random.randint(4, 7))

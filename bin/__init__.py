@@ -3,8 +3,8 @@
 # @Author  : Haijun
 
 from conf.settings import load_or_create_settings
-from core.goods_detail import ProductsSpider
-from core.shop import ShopProducts
+from apps.aliexpress.goods_detail import ProductsSpider
+from apps.aliexpress.shop import ShopProducts
 
 load_or_create_settings('')
 

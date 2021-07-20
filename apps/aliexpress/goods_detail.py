@@ -92,9 +92,17 @@ class ProductsSpider(object):
                     item['weight'] = None
                     item['years'] = self.opened_year(data)
                     item['shippingFrom'] = self.shipping_from(data)
+                    item['keywords'] = self.keywords(data)
+                    item['ownerMemberId'] = self.seller_admin_seq(data)
+                    # item['orderReviews'] = Reviews().crawl_reviews(ali_id, self.seller_admin_seq(data))
                     self.goods_data['code'] = True
                     self.goods_data['item'] = item
-                    # logger.info(json.dumps(self.goods_data, ensure_ascii=False))
+                    # 评论
+                    ae_reviews_id = {
+                        'product_id': ali_id,
+                        'owner_member_id': self.seller_admin_seq(data)
+                    }
+                    self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
                 else:
                     logger.error(f'失败url:   self.url')
             except Exception as e:
@@ -130,6 +138,14 @@ class ProductsSpider(object):
             # table = ';'.join([i for i in table if i and i != ' '])
             # goods_data['item']['description'] = table
         return img_desc, response_text
+
+    @staticmethod
+    def seller_admin_seq(data):
+        return data['storeModule']['sellerAdminSeq']
+
+    @staticmethod
+    def keywords(data):
+        return data['pageModule']['keywords']
 
     @staticmethod
     def detail_url(data):

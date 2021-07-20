@@ -7,3 +7,5 @@ msg.MD
 settings.toml
 *.log
 logs/
+user_data_dir/*
+test*
