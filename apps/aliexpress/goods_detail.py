@@ -31,7 +31,8 @@ class ProductsSpider(object):
             ali_link = 'https://www.aliexpress.com/item/' + str(ali_id) + '.html'
             path = '/item/' + str(ali_id) + '.html'
             try:
-                response_text = request_get(ali_link, headers=headers(path))
+                response_text = request_get(ali_link, headers=headers(path),
+                                            proxy=proxy(settings.PROXY_USER1, settings.PROXY_PWD1))
                 _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
                 data = json.loads(_data)
                 if data:

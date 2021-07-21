@@ -50,6 +50,7 @@ class Reviews(object):
         if status == 200:
             return response
 
+
     def crawl_reviews(self, page=1, flat=True):
         response = self.request_reviews(page)
         if response:
