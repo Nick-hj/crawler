@@ -31,11 +31,11 @@ class ProductsSpider(object):
             ali_link = 'https://www.aliexpress.com/item/' + str(ali_id) + '.html'
             path = '/item/' + str(ali_id) + '.html'
             try:
-                response_text = request_get(ali_link, headers=headers(path), proxy=proxy())
+                response_text = request_get(ali_link, headers=headers(path))
                 _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
                 data = json.loads(_data)
                 if data:
-                    item = dict()
+                    item = {}
                     item['category'] = self.category(data)
                     item['commentNumber'] = self.review(data)
                     item['createTime'] = None
@@ -94,6 +94,7 @@ class ProductsSpider(object):
                     item['shippingFrom'] = self.shipping_from(data)
                     item['keywords'] = self.keywords(data)
                     item['ownerMemberId'] = self.seller_admin_seq(data)
+                    item['isActivity'] = self.is_activity(data)
                     # item['orderReviews'] = Reviews().crawl_reviews(ali_id, self.seller_admin_seq(data))
                     self.goods_data['code'] = True
                     self.goods_data['item'] = item
@@ -103,14 +104,23 @@ class ProductsSpider(object):
                         'owner_member_id': self.seller_admin_seq(data)
                     }
                     self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
+                    goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
+                    self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
+                    logger.info(f'爬取成功： {self.url}')
                 else:
-                    logger.error(f'失败url:   self.url')
+                    self.redis_conn.rpush('aliexpress_url', self.url)
+                    logger.error(f'失败url:   {self.url}')
             except Exception as e:
-                logger.error(f'失败url:   self.url ==== {e}')
-            goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
-            self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
-            logger.info(f'爬取结果： {goods_data_dict}')
+                logger.error(f'失败url:   {self.url} ==== {e}')
+                self.redis_conn.rpush('aliexpress_url', self.url)
         return self.goods_data
+
+    def is_activity(self, data):
+        try:
+            _is_show_banner = data['middleBannerModule']['showUniformBanner']
+        except Exception as e:
+            _is_show_banner = False
+        return _is_show_banner
 
     @logger.catch()
     def parse_desc(self, desc_url):
@@ -323,7 +333,6 @@ class ProductsSpider(object):
                 sku['createTime'] = None
                 sku['goodsId'] = product_id
                 sku['id'] = None
-
                 try:
                     sku['marketPrice'] = sku_price['skuVal']['skuAmount']['value']
                 except Exception as e:
@@ -334,7 +343,6 @@ class ProductsSpider(object):
                     sku['orginalMarketPrice'] = sku['marketPrice']
                 sku['name'] = None
                 sku['num'] = None
-                sku['orginalMarketPrice'] = None
                 sku['orginalPrice'] = None
                 sku['originalSkuId'] = None
                 sku['price'] = sku['costPrice']

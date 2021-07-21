@@ -27,14 +27,14 @@ logger = init_logger()
 
 
 # 代理
-def proxy():
+def proxy(user,password):
     # 代理服务器
     proxyHost = "http-dyn.abuyun.com"
     proxyPort = "9020"
 
     # 代理隧道验证信息
-    proxyUser = settings.PROXY_USER
-    proxyPass = settings.PROXY_PWD
+    proxyUser = user
+    proxyPass = password
     proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
         "host": proxyHost,
         "port": proxyPort,

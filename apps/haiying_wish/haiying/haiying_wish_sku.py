@@ -58,9 +58,11 @@ class HaiyingWishSku(object):
                     sku_dict = dict()
                     size = sku.get('size')
                     if size:
+                        sku_dict['size'] = size
                         properties_size['value'].append(size)
                     color = sku.get('color')
                     if color:
+                        sku_dict['color'] = color
                         properties_color['value'].append(color)
                     sku_dict['pId'] = sku.get('pid')
                     sku_dict['skuId'] = sku.get('sid')
@@ -76,4 +78,4 @@ class HaiyingWishSku(object):
                     'properties': properties,
                     'skuList': sku_list
                 }
-                print(data)
+                return data

@@ -46,39 +46,40 @@ class Reviews(object):
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
         }
         # form请求
-        status,response = request_post(url=self.url, data=data, headers=headers, proxy=proxy())
+        status, response = request_post(url=self.url, data=data, headers=headers, proxy=proxy(settings.PROXY_USER2,settings.PROXY_PWD2))
         if status == 200:
             return response
 
     def crawl_reviews(self, page=1, flat=True):
         response = self.request_reviews(page)
-        html = Selector(response.text)
-        div_list = html.xpath('//div[@class="feedback-list-wrap"]/div')
-        if not div_list:
-            return div_list
-        n = 1
-        if flat:
-            n = self.pages(html)
-        for div in div_list:
-            data_dict = {}
-            data_dict['userName'] = self._user_name(div)
-            data_dict['country'] = self._country(div)
-            data_dict['star'] = self._star(div)
-            data_dict['orderInfo'] = self._order_info(div)
-            data_dict['contentsText'] = self._contents_text(div)
-            data_dict['imageList'] = self._image_list(div)
-            if data_dict['userName']:
-                self.order_reviews.append(data_dict)
-        if n > 1:
-            t_list = []
-            for _page in range(2, n + 1):
-                t = threading.Thread(target=self.crawl_reviews, args=(_page, False))
-                t.start()
-                t_list.append(t)
-            for i in t_list:
-                i.join()
-            # self.crawl_reviews(product_id, owner_member_id, _page, False)
-        return self.order_reviews
+        if response:
+            html = Selector(response.text)
+            div_list = html.xpath('//div[@class="feedback-list-wrap"]/div')
+            if not div_list:
+                return div_list
+            n = 1
+            if flat:
+                n = self.pages(html)
+            for div in div_list:
+                data_dict = {}
+                data_dict['userName'] = self._user_name(div)
+                data_dict['country'] = self._country(div)
+                data_dict['star'] = self._star(div)
+                data_dict['orderInfo'] = self._order_info(div)
+                data_dict['contentsText'] = self._contents_text(div)
+                data_dict['imageList'] = self._image_list(div)
+                if data_dict['userName']:
+                    self.order_reviews.append(data_dict)
+            if n > 1:
+                t_list = []
+                for _page in range(2, n + 1):
+                    t = threading.Thread(target=self.crawl_reviews, args=(_page, False))
+                    t.start()
+                    t_list.append(t)
+                for i in t_list:
+                    i.join()
+                # self.crawl_reviews(product_id, owner_member_id, _page, False)
+            return self.order_reviews
 
     def pages(self, html):
         total_reviews = html.xpath('//div[@class="customer-reviews"]/text()').get()

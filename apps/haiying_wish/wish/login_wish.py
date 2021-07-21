@@ -82,12 +82,12 @@ class LoginWish(object):
             }
         '''
 
-        await self.page.evaluateOnNewDocument(js1)
+        await self.page.evaluate(js1)
         # await self.page.evaluate(js2)
-        await self.page.evaluateOnNewDocument(js3)
-        await self.page.evaluateOnNewDocument(js4)
-        await self.page.evaluateOnNewDocument(js5)
-        await self.page.evaluateOnNewDocument(js6)
+        # await self.page.evaluateOnNewDocument(js3)
+        # await self.page.evaluateOnNewDocument(js4)
+        # await self.page.evaluateOnNewDocument(js5)
+        # await self.page.evaluateOnNewDocument(js6)
 
     async def _init(self):
         """初始化浏览器
@@ -95,6 +95,7 @@ class LoginWish(object):
         self.browser = await pyppeteer.launch({'headless': False,  # headless=True 启动无头模式
                                                'userDataDir': self.base_path,
                                                'args': [
+                                                   '--enable-automation',
                                                    # '--window-size={1300},{600}'
                                                    # '--disable-extensions',
                                                    # '--hide-scrollbars',
@@ -112,9 +113,9 @@ class LoginWish(object):
 
         self.page = await self.browser.newPage()
         # 禁止加载JavaScript，可提高加载速度，视情况确定True/False，
-        await self.page.setJavaScriptEnabled(enabled=False)
+        # await self.page.setJavaScriptEnabled(enabled=False)
         # 运行js来修改window.navigator.webdriver属性值，绕过webdriver检测
-        await self.page.evaluateOnNewDocument('Object.defineProperty(navigator, "webdriver", {get: () => undefined})')
+        # await self.page.evaluateOnNewDocument('Object.defineProperty(navigator, "webdriver", {get: () => undefined})')
 
         await self.page.setUserAgent(
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36')
@@ -143,21 +144,22 @@ class LoginWish(object):
         # 打开登陆页面
         logger.info(f'开始打开主页')
         await self.page.goto(url)
-        time.sleep(20)
         # 注入js
-        await self._injection_js()
+        # await self._injection_js()
+        # await asyncio.sleep(10)
+
         # 输入用户名
         await self.page.type('[data-testid="login-username"]', username, {'delay': random.randint(100, 151) - 50})
         # 输入密码
         await self.page.type('[data-testid="login-password"]', pwd, {'delay': random.randint(100, 151)})
-        time.sleep(random.random() * 2)
+        await asyncio.sleep(random.random() * 2)
         # 点击登陆
-        time.sleep(7)
+        await asyncio.sleep(2)
         logger.info(f'开始点击登录')
         await self.page.click('[data-testid="login-button"]')
         # 获取cookie
-        time.sleep(10)
-        await self.page.goto('https://www.wish.com/feed/tag_53dc186421a86318bdc87f1c')
+        await asyncio.sleep(10)
+        # await self.page.goto('https://www.wish.com/feed/tag_53dc186421a86318bdc87f1c')
         # with open('data.txt', 'w') as f:
         #     f.write(await self.page.content())
         logger.info(f'开始获取cookie')

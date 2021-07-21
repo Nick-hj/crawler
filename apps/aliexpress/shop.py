@@ -14,7 +14,8 @@ from dynaconf import settings
 class ShopProducts(object):
     def __init__(self):
         self.redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
-                                       password=settings.REDIS.PASSWD)
+                                            password=settings.REDIS.PASSWD)
+
     def start_url(self, url, page):
         """
         第一页
@@ -41,7 +42,8 @@ class ShopProducts(object):
                 # 起始页需要判断
                 url = self.start_url(url, 1)
             path = re.search(r'https://www.aliexpress.com/(.*)', url).group(1)
-            response_text = request_get(url, headers=headers(path), proxy=proxy())
+            response_text = request_get(url, headers=headers(path),
+                                        proxy=proxy(settings.PROXY_USER2, settings.PROXY_PWD2))
             if response_text:
                 html = Selector(response_text)
                 urls = self.goods_url(html)

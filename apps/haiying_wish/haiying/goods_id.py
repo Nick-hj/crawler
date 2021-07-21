@@ -5,7 +5,7 @@
 import json
 import redis
 
-from lib.base_fun import request_post, logger
+from lib.base_fun import request_post, logger, proxy
 from dynaconf import settings
 
 
@@ -24,7 +24,7 @@ class HaiyingList(object):
         wish url:https://www.wish.com/c/5c24229a62d5c42244032782
         :return:
         '''
-        for i in range(1, 26):  # 26页
+        for i in range(1, 2):  # 26页
             data = {
                 "index": i,
                 "pageSize": 200,
@@ -62,7 +62,8 @@ class HaiyingList(object):
                 # "oPriceEnd": "",
                 # "token": ""
             }
-            status, response = request_post(url=self.url, headers=self.headers, data=json.dumps(data))
+            status, response = request_post(url=self.url, headers=self.headers, data=json.dumps(data),
+                                            proxy=proxy(settings.PROXY_USER2, settings.PROXY_PWD2))
             if status == 200:
                 yield response.text
 
@@ -74,8 +75,8 @@ class HaiyingList(object):
             if code == 1:
                 data_list = data_dict.get('data', None)
                 p_ids = [d.get('pid', None) for d in data_list]
-                logger.info(p_ids)
-                [self.redis_conn.lpush('wish_id', p_id) for p_id in p_ids]
+                for p_id in p_ids:
+                    yield p_id
 
 
 if __name__ == '__main__':
