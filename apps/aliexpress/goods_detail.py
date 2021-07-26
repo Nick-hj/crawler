@@ -136,18 +136,22 @@ class ProductsSpider(object):
         img_desc = re.findall(r'src="(.*?)"', text3)
         if img_desc:
             tmp_img_desc = [i for i in img_desc if 'png' not in i]
-            img_desc = []
-            for i in tmp_img_desc:
-                if '?' in i:
-                    image = i.split('?')[0]
-                    img_desc.append(image)
-                else:
-                    img_desc = tmp_img_desc
+            _img_desc = []
+            for img in tmp_img_desc:
+                if '?' in img:
+                    img = img.split('?')[0]
+                if img.startswith('//'):
+                    img = 'https:' + img
+                elif not img.startswith('https:') and not img.startswith('//'):
+                    img = 'https://' + img
+                _img_desc.append(img)
+
             # # 详情描述
             # table = response.xpath('//table//text()').extract()
             # table = [re.sub(r'[\r\t\n]+', '', i) for i in table]
             # table = ';'.join([i for i in table if i and i != ' '])
             # goods_data['item']['description'] = table
+            return _img_desc, response_text
         return img_desc, response_text
 
     @staticmethod
@@ -200,12 +204,17 @@ class ProductsSpider(object):
         image = data['imageModule']['imagePathList']
         if image:
             image_list = []
-            for i in image:
+            for img in image:
+                if img.startswith('//'):
+                    img = 'https:' + img
+                elif not img.startswith('https:') and not img.startswith('//'):
+                    img = 'https://' + img
                 pattern = re.compile(r'.*(\.jpg|\.jpeg|\.png)')
-                img_format = pattern.match(i)
+                img_format = pattern.match(img)
                 if img_format:
-                    _image = i + "_Q90" + img_format.group(1) + "_.webp"
+                    _image = img + "_Q90" + img_format.group(1) + "_.webp"
                     image_list.append(_image)
+
             image = image_list
         return image
 
