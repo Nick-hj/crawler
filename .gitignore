@@ -8,4 +8,5 @@ settings.toml
 *.log
 logs/
 user_data_dir/*
-test*
+*/test*
+apps/aliexpress/ae_login_bak_.py

@@ -3,8 +3,13 @@
 # @Author  : Haijun
 import json
 import os
+import threading
+import time
+
+import redis
 import requests
 from contextlib import closing
+from collections.abc import Callable
 
 from loguru import logger as base_logger
 from dynaconf import settings
@@ -108,3 +113,28 @@ def headers(path):
         'cookie': settings.AE_COOKIE
     }
     return headers
+
+
+# def run_decorator(redis_key, sleep_time, ):
+#     def wrapper(func):
+#         def deco(*args, **kwargs):
+#             # 真正执行函数的地方
+#             func(*args, **kwargs)
+#
+#         return deco
+#
+#     return wrapper
+
+def run_thread(redis_conn: redis.client.Redis, redis_key: str, sleep_time: int, func: Callable, thread_num: int):
+    while True:
+        length = redis_conn.llen(redis_key)
+        if length == 0:
+            time.sleep(sleep_time)
+        else:
+            t_list = []
+            for i in range(thread_num):
+                t1 = threading.Thread(target=func, args=())
+                t1.start()
+                t_list.append(t1)
+            for t in t_list:
+                t.join()
