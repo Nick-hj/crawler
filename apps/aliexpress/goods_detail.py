@@ -31,83 +31,91 @@ class ProductsSpider(object):
             ali_link = 'https://www.aliexpress.com/item/' + str(ali_id) + '.html'
             path = '/item/' + str(ali_id) + '.html'
             try:
-                response_text = request_get(ali_link, headers=headers(path),
-                                            proxy=proxy(settings.PROXY_USER1, settings.PROXY_PWD1))
-                _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
-                data = json.loads(_data)
-                if data:
-                    item = {}
-                    item['category'] = self.category(data)
-                    item['commentNumber'] = self.review(data)
-                    item['createTime'] = None
-                    item['deleteSkuIds'] = []
-                    item['description'] = ''
-                    item['detailUrl'] = self.detail_url(data)
-                    item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
-                    item['goodsCreateTime'] = ''
-                    item['goodsExtDetailId'] = 0
-                    item['goodsImages'] = self.images(data)
-                    item['goodsVideos'] = self.video(data)
-                    item['id'] = 0
-                    item['ip'] = ''
-                    item['isFix'] = ''
-                    item['isShow'] = ''
-                    item['itemNumber'] = ''
-                    item['key'] = ''
-                    item['mainImage'] = item['goodsImages'][0]
-                    item['maxMarketPrice'] = self.max_market_price(data)
-                    item['maxPrice'] = self.max_price(data)
-                    item['minMarketPrice'] = self.min_market_price(data)
-                    item['minPrice'] = self.min_price(data)
-                    item['name'] = self.product_title(data)
-                    item['orginalName'] = self.product_title(data)
-                    item['newAddSkuIds'] = [0]
-                    item['originalDescription'] = ''
-                    item['originalSizeTables'] = [{"rowName": [None], "value": "string"}]
-                    item['originalStoreName'] = ''
-                    item['orignalMaxMarketPrice'] = 0
-                    item['orignalMaxPrice'] = 0
-                    item['orignalMinPrice'] = 0
-                    item['packageSize'] = {"height": "string", "length": "string", "width": "string"}
-                    item['productId'] = ali_id
-                    item['productNoFound'] = False
-                    item['productUrl'] = ali_link
-                    item['properties'] = self.prop_name_value(data)
-                    item['saleStock'] = 0
-                    item['score'] = self.star(data)  # 评分
-                    item['shopId'] = ''
-                    item['shopQualification'] = ''
-                    item['showMarketPrice'] = 0
-                    item['showPrice'] = 0
-                    item['sizeImage'] = 0
-                    item['sizeTables'] = [{"rowName": [None], "value": "string"}]
-                    item['skuList'], item['skuIds'] = self.sku_price_list(data, ali_id)
-                    item['skuPrice'] = 0
-                    item['specs'] = self.specification(data)
-                    item['storeName'] = self.store_name(data)
-                    item['storeUrl'] = self.store_url(data)
-                    item['type'] = 0
-                    item['updatePrice'] = True
-                    item['updateSkuPrice'] = True
-                    item['url'] = None
-                    item['weight'] = None
-                    item['years'] = self.opened_year(data)
-                    item['shippingFrom'] = self.shipping_from(data)
-                    item['keywords'] = self.keywords(data)
-                    item['ownerMemberId'] = self.seller_admin_seq(data)
-                    item['isActivity'] = self.is_activity(data)
-                    # item['orderReviews'] = Reviews().crawl_reviews(ali_id, self.seller_admin_seq(data))
-                    self.goods_data['code'] = True
-                    self.goods_data['item'] = item
-                    # 评论
-                    ae_reviews_id = {
-                        'product_id': ali_id,
-                        'owner_member_id': self.seller_admin_seq(data)
-                    }
-                    self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
-                    goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
-                    self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
-                    logger.info(f'爬取成功： {self.url}')
+                status, response = request_get(ali_link, headers=headers(path),
+                                               proxy=proxy(settings.PROXY_USER1, settings.PROXY_PWD1))
+                if status == 200:
+                    response_text = response.text
+                    _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
+                    data = json.loads(_data)
+                    if data:
+                        item = {}
+                        item['category'] = self.category(data)
+                        item['commentNumber'] = self.review(data)
+                        item['createTime'] = None
+                        item['deleteSkuIds'] = []
+                        item['description'] = ''
+                        item['detailUrl'] = self.detail_url(data)
+                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl']) if item[
+                            'detailUrl'] else None, None
+                        item['goodsCreateTime'] = ''
+                        item['goodsExtDetailId'] = 0
+                        item['goodsImages'] = self.images(data)
+                        item['goodsVideos'] = self.video(data)
+                        item['id'] = 0
+                        item['ip'] = ''
+                        item['isFix'] = ''
+                        item['isShow'] = ''
+                        item['itemNumber'] = ''
+                        item['key'] = ''
+                        item['mainImage'] = item['goodsImages'][0]
+                        item['maxMarketPrice'] = self.max_market_price(data)
+                        item['maxPrice'] = self.max_price(data)
+                        item['minMarketPrice'] = self.min_market_price(data)
+                        item['minPrice'] = self.min_price(data)
+                        item['name'] = self.product_title(data)
+                        item['orginalName'] = self.product_title(data)
+                        item['newAddSkuIds'] = [0]
+                        item['originalDescription'] = ''
+                        item['originalSizeTables'] = [{"rowName": [None], "value": "string"}]
+                        item['originalStoreName'] = ''
+                        item['orignalMaxMarketPrice'] = 0
+                        item['orignalMaxPrice'] = 0
+                        item['orignalMinPrice'] = 0
+                        item['packageSize'] = {"height": "string", "length": "string", "width": "string"}
+                        item['productId'] = ali_id
+                        item['productNoFound'] = False
+                        item['productUrl'] = ali_link
+                        item['properties'] = self.prop_name_value(data)
+                        item['saleStock'] = 0
+                        item['score'] = self.star(data)  # 评分
+                        item['shopId'] = ''
+                        item['shopQualification'] = ''
+                        item['showMarketPrice'] = 0
+                        item['showPrice'] = 0
+                        item['sizeImage'] = 0
+                        item['sizeTables'] = [{"rowName": [None], "value": "string"}]
+                        item['skuList'], item['skuIds'] = self.sku_price_list(data, ali_id)
+                        item['skuPrice'] = 0
+                        item['specs'] = self.specification(data)
+                        item['storeName'] = self.store_name(data)
+                        item['storeUrl'] = self.store_url(data)
+                        item['type'] = 0
+                        item['updatePrice'] = True
+                        item['updateSkuPrice'] = True
+                        item['url'] = None
+                        item['weight'] = None
+                        item['years'] = self.opened_year(data)
+                        item['shippingFrom'] = self.shipping_from(data)
+                        item['keywords'] = self.keywords(data)
+                        item['ownerMemberId'] = self.seller_admin_seq(data)
+                        item['isActivity'] = self.is_activity(data)
+                        # item['orderReviews'] = Reviews().crawl_reviews(ali_id, self.seller_admin_seq(data))
+                        self.goods_data['code'] = True
+                        self.goods_data['item'] = item
+                        # 评论
+                        ae_reviews_id = {
+                            'product_id': ali_id,
+                            'owner_member_id': self.seller_admin_seq(data)
+                        }
+                        self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
+                        goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
+                        self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
+                        logger.info(f'爬取成功： {self.url}')
+                    else:
+                        self.redis_conn.rpush('aliexpress_url', self.url)
+                        logger.error(f'失败url:   {self.url}')
+                elif status == 404:
+                    logger.error(f'商品已经下架:   {self.url}')
                 else:
                     self.redis_conn.rpush('aliexpress_url', self.url)
                     logger.error(f'失败url:   {self.url}')
@@ -129,8 +137,9 @@ class ProductsSpider(object):
         详情
         '''
         path = re.search(r'\.com(.*)', desc_url).group(1)
-        response_text = request_get(desc_url)
+        status, response = request_get(desc_url)
         # 详情图片
+        response_text = response.text
         text2 = re.sub('<table.*?table>', '', response_text, re.S)
         text3 = re.sub(r'<a.*?</a>', '', text2, re.S)
         img_desc = re.findall(r'src="(.*?)"', text3)
@@ -167,7 +176,10 @@ class ProductsSpider(object):
         '''
         详情url
         '''
-        return data['descriptionModule']['descriptionUrl']
+        try:
+            return data['descriptionModule']['descriptionUrl']
+        except KeyError as e:
+            return None
 
     @staticmethod
     def category(data):

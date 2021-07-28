@@ -40,9 +40,9 @@ class Wish(object):
 
     def response_text(self, product_id):
         url = f'https://www.wish.com/product/{product_id}?share=web'
-        response = request_get(url=url, headers=self._headers())
+        status, response = request_get(url=url, headers=self._headers())
 
-        _data_str = re.search(r'window.__PRELOADED_STATE__ = (.*?)</script>', response, re.S)
+        _data_str = re.search(r'window.__PRELOADED_STATE__ = (.*?)</script>', response.text, re.S)
         if _data_str:
             data = _data_str.group(1)
             data_dict = json.loads(data)

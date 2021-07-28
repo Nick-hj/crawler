@@ -62,16 +62,16 @@ def request_get(url, headers=None, proxy=None):
     try:
         if proxy:
             with closing(requests.get(url=url, headers=headers, proxies=proxy, timeout=15)) as response:
-                return response.text
+                return response.status_code, response
         else:
             with closing(requests.get(url=url, headers=headers, timeout=15)) as response:
-                return response.text
+                return response.status_code, response
     except requests.exceptions.ProxyError as e:
         with closing(requests.get(url=url, headers=headers, timeout=15)) as response:
-            return response.text
+            return response.status_code, response
     except Exception as e:
         logger.error(f'请求失败====={e}')
-        return 404, ''
+        return 504, ''
 
 
 def request_post(url, data, headers=None, proxy=None):
