@@ -45,8 +45,7 @@ class ProductsSpider(object):
                         item['deleteSkuIds'] = []
                         item['description'] = ''
                         item['detailUrl'] = self.detail_url(data)
-                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl']) if item[
-                            'detailUrl'] else None, None
+                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
                         item['goodsCreateTime'] = ''
                         item['goodsExtDetailId'] = 0
                         item['goodsImages'] = self.images(data)
@@ -111,6 +110,8 @@ class ProductsSpider(object):
                         goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
                         self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
                         logger.info(f'爬取成功： {self.url}')
+                        logger.info(f'爬取成功： {json.dumps(self.goods_data)}')
+
                     else:
                         self.redis_conn.rpush('aliexpress_url', self.url)
                         logger.error(f'失败url:   {self.url}')
