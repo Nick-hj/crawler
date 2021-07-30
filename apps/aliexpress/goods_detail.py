@@ -147,13 +147,14 @@ class ProductsSpider(object):
             tmp_img_desc = [i for i in img_desc if 'png' not in i]
             _img_desc = []
             for img in tmp_img_desc:
-                if '?' in img:
-                    img = img.split('?')[0]
-                if img.startswith('//'):
-                    img = 'https:' + img
-                elif not img.startswith('https:') and not img.startswith('//'):
-                    img = 'https://' + img
-                _img_desc.append(img)
+                if '.jpg' in img or '.jpeg' in img or '.webp' in img or '.bmp' in img:
+                    if '?' in img:
+                        img = img.split('?')[0]
+                    if img.startswith('//'):
+                        img = 'https:' + img
+                    elif not img.startswith('https:') and not img.startswith('//'):
+                        img = 'https://' + img
+                    _img_desc.append(img)
 
             # # 详情描述
             # table = response.xpath('//table//text()').extract()
@@ -161,7 +162,7 @@ class ProductsSpider(object):
             # table = ';'.join([i for i in table if i and i != ' '])
             # goods_data['item']['description'] = table
             return _img_desc, response_text
-        return img_desc, response_text
+        return [], response_text
 
     @staticmethod
     def seller_admin_seq(data):
