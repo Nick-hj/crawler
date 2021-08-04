@@ -3,6 +3,7 @@
 # @Author  : Haijun
 
 import json
+import random
 import re
 import http.client
 import redis
@@ -45,8 +46,7 @@ class ProductsSpider(object):
                         item['deleteSkuIds'] = []
                         item['description'] = ''
                         item['detailUrl'] = self.detail_url(data)
-                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl']) if item[
-                            'detailUrl'] else None, None
+                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
                         item['goodsCreateTime'] = ''
                         item['goodsExtDetailId'] = 0
                         item['goodsImages'] = self.images(data)
@@ -98,14 +98,17 @@ class ProductsSpider(object):
                         item['shippingFrom'] = self.shipping_from(data)
                         item['keywords'] = self.keywords(data)
                         item['ownerMemberId'] = self.seller_admin_seq(data)
+                        item['tradeCount'] = self.trade_count(data)
                         item['isActivity'] = self.is_activity(data)
                         # item['orderReviews'] = Reviews().crawl_reviews(ali_id, self.seller_admin_seq(data))
                         self.goods_data['code'] = True
                         self.goods_data['item'] = item
                         # 评论
                         ae_reviews_id = {
+                            "product_name": item['name'],
                             'product_id': ali_id,
-                            'owner_member_id': self.seller_admin_seq(data)
+                            'owner_member_id': self.seller_admin_seq(data),
+                            'tag':True
                         }
                         self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
                         goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
@@ -155,12 +158,6 @@ class ProductsSpider(object):
                     elif not img.startswith('https:') and not img.startswith('//'):
                         img = 'https://' + img
                     _img_desc.append(img)
-
-            # # 详情描述
-            # table = response.xpath('//table//text()').extract()
-            # table = [re.sub(r'[\r\t\n]+', '', i) for i in table]
-            # table = ';'.join([i for i in table if i and i != ' '])
-            # goods_data['item']['description'] = table
             return _img_desc, response_text
         return [], response_text
 
@@ -538,7 +535,7 @@ class ProductsSpider(object):
     @staticmethod
     def trade_count(data):
         '''
-        交易数量
+        交易数量,
         :param data:
         :return:
         '''

@@ -3,6 +3,8 @@
 # @Author  : Haijun
 
 import json
+import random
+
 import redis
 from dynaconf import settings
 from lib.base_fun import logger
@@ -17,14 +19,18 @@ def run_reviews():
     ae_reviews_id = redis_conn.lpop('ae_reviews_id')
     if ae_reviews_id:
         d = json.loads(ae_reviews_id)
-        product_id = d.get('product_id')
-        owner_member_id = d.get('owner_member_id')
+        product_name = d.get('product_name', None)
+        product_id = d.get('product_id', None)
+        owner_member_id = d.get('owner_member_id', None)
         r = Reviews(product_id, owner_member_id)
-        reviews = r.crawl_reviews()
+        reviews = r.review_results()
         if reviews:
+            trade_count = random.randint(5, 10)
             data = {
                 'productId': product_id,
+                'productName': product_name,
                 'ownerMemberId': owner_member_id,
+                'tradeCount': trade_count * len(reviews),
                 'orderReviews': reviews
             }
             redis_conn.lpush('aliexpress_reviews', json.dumps(data))
