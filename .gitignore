@@ -10,3 +10,5 @@ logs/
 user_data_dir/*
 */test*
 apps/aliexpress/ae_login_bak_.py
+utils/dbs.py
+utils/reviews_to_mysql.py

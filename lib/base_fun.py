@@ -14,6 +14,9 @@ from collections.abc import Callable
 from loguru import logger as base_logger
 from dynaconf import settings
 
+redis_conn = redis.StrictRedis(host=settings.REDIS.HOST, port=settings.REDIS.PORT, db=settings.REDIS.DB,
+                               password=settings.REDIS.PASSWD)
+
 
 def init_logger():
     '''
@@ -77,13 +80,16 @@ def request_get(url, headers=None, proxy=None):
 def request_post(url, data, headers=None, proxy=None):
     try:
         if proxy:
-            with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy, timeout=15)) as response:
+            with closing(requests.post(url=url, data=data, headers=headers, proxies=proxy, timeout=5)) as response:
                 return response.status_code, response
         else:
-            with closing(requests.post(url=url, data=data, headers=headers, timeout=15)) as response:
+            with closing(requests.post(url=url, data=data, headers=headers, timeout=5)) as response:
                 return response.status_code, response
     except requests.exceptions.ProxyError as e:
-        with closing(requests.post(url=url, data=data, headers=headers, timeout=15)) as response:
+        with closing(requests.post(url=url, data=data, headers=headers, timeout=5)) as response:
+            return response.status_code, response
+    except TimeoutError as e:
+        with closing(requests.post(url=url, data=data, headers=headers, timeout=5)) as response:
             return response.status_code, response
     except Exception as e:
         logger.error(f'请求失败====={e}')
@@ -125,7 +131,7 @@ def headers(path):
 #
 #     return wrapper
 
-def run_thread(redis_conn: redis.client.Redis, redis_key: str, sleep_time: int, func: Callable, thread_num: int):
+def run_thread(redis_key: str, sleep_time: int, func: Callable, thread_num: int):
     while True:
         length = redis_conn.llen(redis_key)
         if length == 0:
@@ -138,3 +144,12 @@ def run_thread(redis_conn: redis.client.Redis, redis_key: str, sleep_time: int, 
                 t_list.append(t1)
             for t in t_list:
                 t.join()
+
+
+def run_single_fun(redis_key: str, sleep_time: int, func):
+    while True:
+        length = redis_conn.llen(redis_key)
+        if length == 0:
+            time.sleep(sleep_time)
+        else:
+            func()

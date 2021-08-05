@@ -7,7 +7,7 @@ import datetime
 import json
 import random
 import time
-
+from lib.base_fun import logger
 from aredis import StrictRedis
 from aiomysql.sa import create_engine
 
@@ -29,10 +29,10 @@ class ReviewsToMyswl(object):
             # db='aliexpress',
             # user='root',
             # password='root',
-            host='172.31.0.155',
-            db='voghion-comment',
-            user='prod',
-            password='Stars@2019',
+            host='',
+            db='',
+            user='',
+            password='',
             maxsize=10,  # 连接池最多同时处理10个请求
             minsize=1,  # 连接池最少1个请求
             loop=loop
@@ -44,39 +44,43 @@ class ReviewsToMyswl(object):
         async with engine.acquire() as conn:
             data_dict = json.loads(data)
             product_id = data_dict['productId']
+            product_name = data_dict['productName']
+            trade_count = data_dict['tradeCount']
             goods_url = f'https://www.aliexpress.com/item/{product_id}.html'
-            print(goods_url)
-            cache_goods_id = await self.redis_conn.get(str(product_id))
-            if not cache_goods_id:
-                select_g_sql = "select s.goods_id from `product-ua`.`goods_ext_detail` s where s.goods_url=%s"
-                select_result = await conn.execute(select_g_sql, goods_url)
-                if select_result.rowcount == 1:
-                    _goods_id = await select_result.fetchone()
-                    goods_id = _goods_id[0]
-                    print(goods_id)
-                    select_r_sql = "select * from user_goods_comment u where u.goods_id=%s"
-                    select_r_result = await conn.execute(select_r_sql, goods_id)
-                    if select_r_result.rowcount == 0:
-                        review = data_dict.get('orderReviews')
-                        if review:
-                            for t in review:
-                                user_name = t.get('userName', None)
-                                score = t.get('star', 0)
-                                comment = t.get('contentsText', None)
-                                img_url = ';'.join(t.get('imageList', None))
-                                review_time = self._c_time(t.get('review_time', None))
-                                props = self._prop(t.get('orderInfo', []))
-                                tx = await conn.begin()
-                                review_sql = """INSERT INTO `user_goods_comment`(`user_id`, `goods_id`, `goods_name`, `sku_id`, `sku_name`, `comment`, `score`, `img_url`, `order_id`, `status`, `sort`, `create_time`, `update_time`, `nick_name`, `head_img`,`order_info`) VALUES (NULL, %s, '', 0, '', %s, %s, %s, '', 20, 0, %s, %s, %s, NULL,%s)"""
-                                review_val = [goods_id, comment, score, img_url, review_time, review_time, user_name,
-                                              props]
-                                await conn.execute(review_sql, review_val)
-                                await tx.commit()
-                                await self.redis_conn.set(str(product_id), product_id)
-                                await self.redis_conn.expire(str(goods_id), 600)
+            # cache_goods_id = await self.redis_conn.get(str(product_id))
+            # if not cache_goods_id:
+            select_g_sql = "select s.goods_id from `product-ua`.`goods_ext_detail` s where s.goods_url=%s"
+            select_result = await conn.execute(select_g_sql, goods_url)
+            if select_result.rowcount == 1:
+                _goods_id = await select_result.fetchone()
+                goods_id = _goods_id[0]
+                logger.info(f'入库id====={goods_id},交易量: {trade_count}，商品id: {product_id}')
+                select_r_sql = "select * from user_goods_comment u where u.goods_id=%s"
+                select_r_result = await conn.execute(select_r_sql, goods_id)
+                if select_r_result.rowcount == 0:
+                    review = data_dict.get('orderReviews')
+                    if review:
+                        for t in review:
+                            user_name = t.get('userName', None)
+                            score = t.get('star', 0)
+                            comment = t.get('contentsText', None)
+                            img_url = ';'.join(t.get('imageList', None))
+                            review_time = t.get('rTime', None)
+                            props = self._prop(t.get('orderInfo', []))
+                            tx = await conn.begin()
+                            review_sql = """INSERT INTO `user_goods_comment`(`user_id`, `goods_id`, `goods_name`, `sku_id`, `sku_name`, `comment`, `score`, `img_url`, `order_id`, `status`, `sort`, `create_time`, `update_time`, `nick_name`, `head_img`,`order_info`) VALUES (NULL, %s, %s, 0, '', %s, %s, %s, '', 20, 0, %s, %s, %s, NULL,%s)"""
+                            review_val = [goods_id, product_name, comment, score, img_url, review_time, review_time,
+                                          user_name,
+                                          props]
+                            update_goods_sql = 'UPDATE `product-ua`.goods  set sales=%s where id =%s'
+                            update_goods_val = [trade_count, goods_id]
+                            await conn.execute(review_sql, review_val)
+                            await conn.execute(update_goods_sql, update_goods_val)
+                            await tx.commit()
+                            # await self.redis_conn.set(str(product_id), product_id)
+                            # await self.redis_conn.expire(str(product_id), 600)
                 else:
                     await self.redis_conn.rpush('aliexpress_url', goods_url)
-
         engine.terminate()
         engine.close()
         await engine.wait_closed()
@@ -119,9 +123,9 @@ class ReviewsToMyswl(object):
     def main(self):
         loop = asyncio.get_event_loop()
         # loop.run_until_complete(self.redis_goods(loop))
-        tasks = [asyncio.ensure_future(self.redis_goods(loop)) for i in range(5)]
+        tasks = [asyncio.ensure_future(self.redis_goods(loop)) for i in range(10)]
         loop.run_until_complete(asyncio.wait(tasks))
-
+        return True
 
 
 if __name__ == '__main__':

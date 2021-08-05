@@ -22,7 +22,7 @@ def run_reviews():
         product_name = d.get('product_name', None)
         product_id = d.get('product_id', None)
         owner_member_id = d.get('owner_member_id', None)
-        r = Reviews(product_id, owner_member_id)
+        r = Reviews(product_id, owner_member_id,product_name)
         reviews = r.review_results()
         if reviews:
             trade_count = random.randint(5, 10)
@@ -38,4 +38,4 @@ def run_reviews():
 
 
 if __name__ == '__main__':
-    run_thread(redis_conn, 'ae_reviews_id', 100, run_reviews, 30)
+    run_thread('ae_reviews_id', 100, run_reviews, 10)
