@@ -46,7 +46,11 @@ class ProductsSpider(object):
                         item['deleteSkuIds'] = []
                         item['description'] = ''
                         item['detailUrl'] = self.detail_url(data)
-                        item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
+                        if item['detailUrl']:
+                            item['detailsImgs'], item['document'] = self.parse_desc(item['detailUrl'])
+                        else:
+                            item['detailsImgs'] = None
+                            item['document'] = None
                         item['goodsCreateTime'] = ''
                         item['goodsExtDetailId'] = 0
                         item['goodsImages'] = self.images(data)
@@ -108,7 +112,7 @@ class ProductsSpider(object):
                             "product_name": item['name'],
                             'product_id': ali_id,
                             'owner_member_id': self.seller_admin_seq(data),
-                            'tag':True
+                            'tag': True
                         }
                         self.redis_conn.lpush('ae_reviews_id', json.dumps(ae_reviews_id))
                         goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
@@ -139,7 +143,7 @@ class ProductsSpider(object):
         '''
         详情
         '''
-        path = re.search(r'\.com(.*)', desc_url).group(1)
+        # path = re.search(r'\.com(.*)', desc_url).group(1)
         status, response = request_get(desc_url)
         # 详情图片
         response_text = response.text

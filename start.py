@@ -48,6 +48,6 @@ def run_goods_info():
 
 #
 if __name__ == '__main__':
-    run_thread(redis_conn, 'aliexpress_url', 2, run_goods_info, 15)
+    run_thread('aliexpress_url', 2, run_goods_info, 15)
 
     # crawler('https://www.aliexpress.com/item/1005001798022744.html')
