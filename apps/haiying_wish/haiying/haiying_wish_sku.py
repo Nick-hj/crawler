@@ -46,12 +46,17 @@ class HaiyingWishSku(object):
                 data = result['data']
                 sku_list = list()
                 properties = list()
+                price_list = []
                 properties_size = {
-                    'name': 'size',
+                    'id': 'size',
+                    'name': 'Size',
+                    'orginalName': 'Size',
                     'value': list()
                 }
                 properties_color = {
-                    'name': 'color',
+                    'id': 'color',
+                    'name': 'Color',
+                    'orginalName': 'Color',
                     'value': list()
                 }
                 for sku in data:
@@ -64,18 +69,51 @@ class HaiyingWishSku(object):
                     if color:
                         sku_dict['color'] = color
                         properties_color['value'].append(color)
-                    sku_dict['pId'] = sku.get('pid')
+                    price = sku.get('price')
+                    sku_dict['goodsId'] = sku.get('pid')
                     sku_dict['skuId'] = sku.get('sid')
-                    sku_dict['price'] = sku.get('price')
+                    sku_dict['costPrice'] = price
+                    sku_dict['price'] = price
+                    sku_dict['marketPrice'] = price
+                    sku_dict['orginalMarketPrice'] = price
+                    sku_dict['stock'] = 0
+                    sku_dict['skuPropIds'] = f"size:color"
+                    sku_dict['skuAttr'] = f"size:{size.replace(' ', '').lower()};color:{color.replace(' ', '').lower()}"
                     sku_list.append(sku_dict)
+                    price_list.append(float(price))
+                print(price_list)
                 if properties_size['value']:
-                    properties_size['value'] = list(set(properties_size['value']))
+                    val_list = list()
+                    vals = list(set(properties_size['value']))
+                    for val in vals:
+                        val_dict = {
+                            'id': val.replace(' ', '').lower(),
+                            "imgId": None,
+                            "imgUrl": None,
+                            "mainUrl": None,
+                            "value": val,
+                            "orginalValue": val
+                        }
+                        val_list.append(val_dict)
+                    properties_size['value'] = val_list
                     properties.append(properties_size)
                 if properties_color['value']:
-                    properties_color['value'] = list(set(properties_color['value']))
+                    val_list = list()
+                    vals = list(set(properties_color['value']))
+                    for val in vals:
+                        val_dict = {
+                            'id': val.replace(' ', '').lower(),
+                            "imgId": None,
+                            "imgUrl": None,
+                            "mainUrl": None,
+                            "value": val,
+                            "orginalValue": val
+                        }
+                        val_list.append(val_dict)
+                    properties_color['value'] = val_list
                     properties.append(properties_color)
                 data = {
                     'properties': properties,
                     'skuList': sku_list
                 }
-                return data
+                return data, price_list

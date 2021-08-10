@@ -41,7 +41,6 @@ class Wish(object):
     def response_text(self, product_id):
         url = f'https://www.wish.com/product/{product_id}?share=web'
         status, response = request_get(url=url, headers=self._headers())
-
         _data_str = re.search(r'window.__PRELOADED_STATE__ = (.*?)</script>', response.text, re.S)
         if _data_str:
             data = _data_str.group(1)
@@ -61,7 +60,6 @@ class Wish(object):
             #     #
             #     # self.crawl_wish(product_id)
             #     return
-            logger.info(f'开始获取数据')
             product = login_data['product'][product_id]['staticFields']
             # print(json.dumps(product))
             item = dict()
@@ -154,3 +152,10 @@ class Wish(object):
     @staticmethod
     def properties(data):
         _property = data['dimensionToValues']
+
+    @staticmethod
+    def keywords(data):
+        d = data['keywords']
+        if d:
+            return d[0]
+        return None

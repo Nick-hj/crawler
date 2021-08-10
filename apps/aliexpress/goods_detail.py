@@ -36,7 +36,7 @@ class ProductsSpider(object):
                                                proxy=proxy(settings.PROXY_USER1, settings.PROXY_PWD1))
                 if status == 200:
                     response_text = response.text
-                    _data = re.findall(r'data:(.*),.*csrfToken:', response_text, re.S)[0]
+                    _data = re.findall(r'data: ({.*),.*csrfToken:', response_text, re.S)[0]
                     data = json.loads(_data)
                     if data:
                         item = {}
@@ -118,6 +118,7 @@ class ProductsSpider(object):
                         goods_data_dict = json.dumps(self.goods_data, ensure_ascii=False)
                         self.redis_conn.lpush(settings.SAVE_GOODS_TO_REDIS_KEY, goods_data_dict)
                         logger.info(f'爬取成功： {self.url}')
+                        logger.info(f'爬取成功： {json.dumps(self.goods_data)}')
                     else:
                         self.redis_conn.rpush('aliexpress_url', self.url)
                         logger.error(f'失败url:   {self.url}')

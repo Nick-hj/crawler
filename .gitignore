@@ -12,3 +12,4 @@ user_data_dir/*
 apps/aliexpress/ae_login_bak_.py
 utils/dbs.py
 utils/reviews_to_mysql.py
+*.js

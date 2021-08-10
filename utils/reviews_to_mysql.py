@@ -29,10 +29,10 @@ class ReviewsToMyswl(object):
             # db='aliexpress',
             # user='root',
             # password='root',
-            host='',
-            db='',
-            user='',
-            password='',
+            host='172.31.0.155',
+            db='voghion-comment',
+            user='prod',
+            password='Stars@2019',
             maxsize=10,  # 连接池最多同时处理10个请求
             minsize=1,  # 连接池最少1个请求
             loop=loop

@@ -70,6 +70,7 @@ def request_get(url, headers=None, proxy=None):
             with closing(requests.get(url=url, headers=headers, timeout=15)) as response:
                 return response.status_code, response
     except requests.exceptions.ProxyError as e:
+        logger.info(e)
         with closing(requests.get(url=url, headers=headers, timeout=15)) as response:
             return response.status_code, response
     except Exception as e:
@@ -120,16 +121,6 @@ def headers(path):
     }
     return headers
 
-
-# def run_decorator(redis_key, sleep_time, ):
-#     def wrapper(func):
-#         def deco(*args, **kwargs):
-#             # 真正执行函数的地方
-#             func(*args, **kwargs)
-#
-#         return deco
-#
-#     return wrapper
 
 def run_thread(redis_key: str, sleep_time: int, func: Callable, thread_num: int):
     while True:

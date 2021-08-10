@@ -62,8 +62,9 @@ class HaiyingList(object):
                 # "oPriceEnd": "",
                 # "token": ""
             }
-            status, response = request_post(url=self.url, headers=self.headers, data=json.dumps(data),
-                                            proxy=proxy(settings.PROXY_USER2, settings.PROXY_PWD2))
+            # status, response = request_post(url=self.url, headers=self.headers, data=json.dumps(data),
+            #                                 proxy=proxy(settings.PROXY_USER2, settings.PROXY_PWD2))
+            status, response = request_post(url=self.url, headers=self.headers, data=json.dumps(data))
             if status == 200:
                 yield response.text
 
